@@ -416,11 +416,17 @@ def process_successful_mutation(
     @p parents, as well as statistics for given rule in rule_set and stats stored in fuzzing
     progress.
 
+    :param executable: tested executable
+    :param collector: collector used to collect profiling data
+    :param postprocessor: list of postprocessors, which are run after collection
+    :param minor_version_list: list of minor version for which we are collecting
     :param mutation: successfully evaluated mutation
     :param fuzz_progress: collective state of fuzzing
     :param parents: list of parents, i.e. mutations which will be further mutated
     :param rule_set: set of applied rules
     :param config: configuration of the fuzzing
+    :param baseline_profile: baseline against which we are checking the degradation
+    :param kwargs: dictionary of additional params for postprocessor and collector
     """
     kwargs["mutation"] = mutation
     kwargs["collector"] = collector
