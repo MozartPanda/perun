@@ -110,7 +110,8 @@ def run_command_with_input(executable: Executable, complement: str, **kwargs: An
 
 def read_input(is_fuzzing: bool, **kwargs: Any) -> str:
     if is_fuzzing:
-        input_file = kwargs.get("mutation").path
+        mutation: Mutation = kwargs.get("mutation")
+        input_file = mutation.path
     else:
         input_file = kwargs.get("input_sample")
     input_path = Path(input_file)
