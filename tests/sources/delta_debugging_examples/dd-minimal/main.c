@@ -28,7 +28,13 @@ int main(int argc, char* argv[]) {
     if (argc != 2) {
         return 1;
     }
-
-    checkInputString(argv[1]);
+    FILE * fp = fopen(argv[1],"r");
+    char fileContent[15];
+    int i = 0;
+    char ch;
+    while ((ch = fgetc(fp)) != EOF) {
+        fileContent[i++] = ch;
+    }
+    checkInputString(fileContent);
     return 0;
 }

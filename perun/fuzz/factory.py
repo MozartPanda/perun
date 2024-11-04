@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from subprocess import CalledProcessError, TimeoutExpired
-from typing import Optional, Any, cast, TYPE_CHECKING
+from typing import Optional, Any, cast, TYPE_CHECKING, Iterable
 from uuid import uuid4
 
 # Third-Party Imports
@@ -33,11 +33,12 @@ from perun.utils import log
 from perun.utils.exceptions import SuppressedExceptions
 import perun.fuzz.evaluate.by_perun as evaluate_workloads_by_perun
 import perun.fuzz.evaluate.by_coverage as evaluate_workloads_by_coverage
+from perun.deltadebugging.factory import delta_debugging_algorithm
 
 if TYPE_CHECKING:
     import types
-
-    from perun.utils.structs.common_structs import Executable, MinorVersion
+    from perun.profile.factory import Profile
+    from perun.utils.structs.common_structs import Executable, MinorVersion, CollectStatus, Job
 
 # to ignore numpy division warnings
 np.seterr(divide="ignore", invalid="ignore")
@@ -399,11 +400,17 @@ def teardown(
 
 
 def process_successful_mutation(
+    executable: Executable,
     mutation: Mutation,
+    collector: str,
+    postprocessor: list[str],
+    minor_version_list: list[MinorVersion],
     parents: list[Mutation],
     fuzz_progress: FuzzingProgress,
     rule_set: RuleSet,
     config: FuzzingConfiguration,
+    base_result_profile: Iterable[tuple[CollectStatus, Profile, Job]],
+    **kwargs: Any,
 ) -> None:
     """If the @p mutation is successful during the evaluation, we update the parent queue
     @p parents, as well as statistics for given rule in rule_set and stats stored in fuzzing
@@ -415,6 +422,12 @@ def process_successful_mutation(
     :param rule_set: set of applied rules
     :param config: configuration of the fuzzing
     """
+    kwargs["mutation"] = mutation
+    kwargs["collector"] = collector
+    kwargs["postprocessor"] = postprocessor
+    kwargs["minor_version_list"] = minor_version_list
+    kwargs["base_result"] = base_result_profile
+    delta_debugging_algorithm(executable, True, **kwargs)
     rule_set.hits[mutation.history[-1]] += 1
     rule_set.hits[-1] += 1
     # without cov testing we firstly rate the new parents here
@@ -623,7 +636,19 @@ def run_fuzzing_for_command(
                     **kwargs,
                 )
                 if successful_result:
-                    process_successful_mutation(mutation, parents, fuzz_progress, rule_set, config)
+                    process_successful_mutation(
+                        executable,
+                        mutation,
+                        collector,
+                        postprocessor,
+                        minor_version_list,
+                        parents,
+                        fuzz_progress,
+                        rule_set,
+                        config,
+                        base_copy,
+                        **kwargs,
+                    )
 
             log.minor_status(f"{mutation.path}", status=f"{mutation.fitness}")
             # in case of testing with coverage, parent will not be removed but used for mutation
