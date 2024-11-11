@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
     char fileContent[15];
     int i = 0;
     char ch;
-    while ((i >= sizeof(fileContent) - 1) && (ch = fgetc(fp)) != EOF) {
+    while ((i < sizeof(fileContent) - 1) && (ch = fgetc(fp)) != EOF) {
         fileContent[i++] = ch;
     }
     checkInputString(fileContent);
