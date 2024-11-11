@@ -32,12 +32,7 @@ int main(int argc, char* argv[]) {
     char fileContent[15];
     int i = 0;
     char ch;
-    while ((ch = fgetc(fp)) != EOF) {
-        if (i >= sizeof(fileContent) - 1) {
-            fprintf(stderr, "Error: File content exceeds buffer size.\n");
-            fclose(fp);
-            return 1;
-        }
+    while ((i >= sizeof(fileContent) - 1) && (ch = fgetc(fp)) != EOF) {
         fileContent[i++] = ch;
     }
     checkInputString(fileContent);
